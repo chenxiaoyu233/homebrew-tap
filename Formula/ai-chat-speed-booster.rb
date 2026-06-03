@@ -20,7 +20,20 @@ class AiChatSpeedBooster < Formula
 
   def install
     system "npm", "ci"
-    system "npm", "run", "safari:setup"
+    system "npm", "run", "build:safari"
+
+    # Bypass `npm run safari:convert` because its `safari-web-extension-converter`
+    # invocation lacks `--no-open` and pops Xcode in the user's face mid-install.
+    with_env DEVELOPER_DIR: "/Applications/Xcode.app/Contents/Developer" do
+      system "xcrun", "safari-web-extension-converter", "dist/safari",
+             "--project-location", "safari-app",
+             "--app-name", "AI Chat Speed Booster",
+             "--bundle-identifier", "com.noah.aichatspeedbooster",
+             "--no-open",
+             "--force"
+    end
+
+    system "npm", "run", "safari:fix-signing"
 
     xcodeproj = "safari-app/AI Chat Speed Booster/AI Chat Speed Booster.xcodeproj"
 
