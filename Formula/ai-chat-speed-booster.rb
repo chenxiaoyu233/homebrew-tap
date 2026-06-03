@@ -23,16 +23,22 @@ class AiChatSpeedBooster < Formula
     system "npm", "run", "safari:setup"
 
     xcodeproj = "safari-app/AI Chat Speed Booster/AI Chat Speed Booster.xcodeproj"
+
+    schemes = Utils.safe_popen_read("xcodebuild", "-project", xcodeproj, "-list")
+    scheme = schemes.lines.map(&:strip).find { |line| line.include?("(macOS)") } ||
+             schemes.lines.map(&:strip).find { |line| line == "AI Chat Speed Booster" }
+    odie "Could not find a macOS scheme in #{xcodeproj}\n#{schemes}" if scheme.nil?
+
     system "xcodebuild",
            "-project", xcodeproj,
-           "-scheme", "AI Chat Speed Booster",
+           "-scheme", scheme,
            "-configuration", "Release",
            "-derivedDataPath", "xcbuild",
            "CODE_SIGNING_ALLOWED=NO",
            "CODE_SIGN_IDENTITY=",
            "CODE_SIGNING_REQUIRED=NO"
 
-    prefix.install "xcbuild/Build/Products/Release/AI Chat Speed Booster.app"
+    prefix.install Dir["xcbuild/Build/Products/Release/AI Chat Speed Booster.app"].first
   end
 
   def post_install
@@ -47,7 +53,7 @@ class AiChatSpeedBooster < Formula
     quiet_system "/usr/bin/open", "-g", "-j", "-a", app
     sleep 2
     quiet_system "/usr/bin/osascript", "-e",
-                 %(tell application id "com.noah.aichatspeedbooster" to quit)
+                 %(tell application "AI Chat Speed Booster" to quit)
   end
 
   def caveats
@@ -70,7 +76,7 @@ class AiChatSpeedBooster < Formula
   test do
     app = prefix/"AI Chat Speed Booster.app"
     assert_predicate app/"Contents/Info.plist", :exist?
-    bundle_id = shell_output("/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' '#{app}/Contents/Info.plist'").strip
-    assert_equal "com.noah.aichatspeedbooster", bundle_id
+    name = shell_output("/usr/libexec/PlistBuddy -c 'Print :CFBundleName' '#{app}/Contents/Info.plist'").strip
+    assert_equal "AI Chat Speed Booster", name
   end
 end

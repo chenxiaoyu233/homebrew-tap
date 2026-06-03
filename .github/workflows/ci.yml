@@ -22,14 +22,20 @@ jobs:
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
-      - name: Tap this repository
-        run: brew tap "$GITHUB_REPOSITORY" "$GITHUB_WORKSPACE"
+      - name: Link checkout into Homebrew taps
+        run: |
+          owner=$(echo "${GITHUB_REPOSITORY%%/*}" | tr '[:upper:]' '[:lower:]')
+          repo=$(echo  "${GITHUB_REPOSITORY##*/}" | tr '[:upper:]' '[:lower:]')
+          tap_dir="$(brew --repository)/Library/Taps/${owner}/${repo}"
+          mkdir -p "$(dirname "$tap_dir")"
+          rm -rf "$tap_dir"
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
 
       - name: Select Xcode
         run: sudo xcode-select --switch /Applications/Xcode.app
 
       - name: Build and install formula
-        run: brew install --build-from-source --formula "$GITHUB_REPOSITORY/ai-chat-speed-booster"
+        run: brew install --build-from-source --formula chenxiaoyu233/tap/ai-chat-speed-booster
 
       - name: Run formula tests
-        run: brew test "$GITHUB_REPOSITORY/ai-chat-speed-booster"
+        run: brew test chenxiaoyu233/tap/ai-chat-speed-booster
