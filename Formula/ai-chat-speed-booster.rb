@@ -53,7 +53,7 @@ class AiChatSpeedBooster < Formula
     quiet_system "/usr/bin/open", "-g", "-j", "-a", app
     sleep 2
     quiet_system "/usr/bin/osascript", "-e",
-                 %(tell application id "com.noah.aichatspeedbooster" to quit)
+                 %(tell application "AI Chat Speed Booster" to quit)
   end
 
   def caveats
@@ -76,7 +76,7 @@ class AiChatSpeedBooster < Formula
   test do
     app = prefix/"AI Chat Speed Booster.app"
     assert_predicate app/"Contents/Info.plist", :exist?
-    bundle_id = shell_output("/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' '#{app}/Contents/Info.plist'").strip
-    assert_equal "com.noah.aichatspeedbooster", bundle_id
+    name = shell_output("/usr/libexec/PlistBuddy -c 'Print :CFBundleName' '#{app}/Contents/Info.plist'").strip
+    assert_equal "AI Chat Speed Booster", name
   end
 end
