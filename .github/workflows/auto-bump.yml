@@ -1,0 +1,64 @@
+name: Auto-bump ai-chat-speed-booster
+
+on:
+  schedule:
+    - cron: "0 4 * * *"   # 04:00 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_FROM_API: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Tap this repository
+        run: brew tap "$GITHUB_REPOSITORY" "$GITHUB_WORKSPACE"
+
+      - name: Configure git author
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Check for new upstream version
+        id: check
+        run: |
+          json=$(brew livecheck --json --formula "$GITHUB_REPOSITORY/ai-chat-speed-booster")
+          current=$(echo "$json" | jq -r '.[0].version.current')
+          latest=$(echo "$json"  | jq -r '.[0].version.latest')
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest"   >> "$GITHUB_OUTPUT"
+          if [ "$current" = "$latest" ] || [ -z "$latest" ] || [ "$latest" = "null" ]; then
+            echo "needs_bump=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_bump=true"  >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open bump PR
+        if: steps.check.outputs.needs_bump == 'true'
+        id: bump
+        run: |
+          brew bump-formula-pr \
+            --no-audit \
+            --no-browse \
+            --no-fork \
+            --tap "$GITHUB_REPOSITORY" \
+            --version "${{ steps.check.outputs.latest }}" \
+            ai-chat-speed-booster
+          pr_number=$(gh pr list --head "bump-ai-chat-speed-booster-${{ steps.check.outputs.latest }}" --json number --jq '.[0].number')
+          echo "pr_number=$pr_number" >> "$GITHUB_OUTPUT"
+
+      - name: Enable auto-merge
+        if: steps.check.outputs.needs_bump == 'true' && steps.bump.outputs.pr_number != ''
+        run: gh pr merge "${{ steps.bump.outputs.pr_number }}" --auto --squash
