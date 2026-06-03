@@ -23,8 +23,14 @@ jobs:
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
-      - name: Tap this repository
-        run: brew tap "$GITHUB_REPOSITORY" "$GITHUB_WORKSPACE"
+      - name: Link checkout into Homebrew taps
+        run: |
+          owner=$(echo "${GITHUB_REPOSITORY%%/*}" | tr '[:upper:]' '[:lower:]')
+          repo=$(echo  "${GITHUB_REPOSITORY##*/}" | tr '[:upper:]' '[:lower:]')
+          tap_dir="$(brew --repository)/Library/Taps/${owner}/${repo}"
+          mkdir -p "$(dirname "$tap_dir")"
+          rm -rf "$tap_dir"
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
 
       - name: Configure git author
         run: |
