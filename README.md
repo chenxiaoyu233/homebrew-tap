@@ -8,6 +8,12 @@ The upstream project does not ship a prebuilt Safari `.app`; Safari users have t
 
 ```bash
 brew tap chenxiaoyu233/tap
+brew install ai-chat-speed-booster
+```
+
+Or as a single command (auto-taps if needed):
+
+```bash
 brew install chenxiaoyu233/tap/ai-chat-speed-booster
 ```
 
@@ -32,7 +38,7 @@ This toggle persists across reboots; you only do it once per Mac.
 ## Upgrade
 
 ```bash
-brew upgrade chenxiaoyu233/tap/ai-chat-speed-booster
+brew upgrade ai-chat-speed-booster
 ```
 
 This tap's CI bumps the formula automatically when upstream tags a new release (see `.github/workflows/auto-bump.yml`), so `brew upgrade` picks up new versions without any manual intervention.
@@ -40,7 +46,7 @@ This tap's CI bumps the formula automatically when upstream tags a new release (
 ## Uninstall
 
 ```bash
-brew uninstall chenxiaoyu233/tap/ai-chat-speed-booster
+brew uninstall ai-chat-speed-booster
 ```
 
 Then restart Safari once so it drops the now-orphaned entry from `Settings → Extensions`.
